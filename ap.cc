@@ -49,12 +49,6 @@ static inline void get_aperfmperf(struct aperfmperf *am)
 {
     rdmsrl(MSR_IA32_APERF, am->aperf);
     rdmsrl(MSR_IA32_MPERF, am->mperf);
-
-    std::clog
-    << "cur aperf: " << std::hex << am->aperf
-    << ", cur mperf: " << am->mperf << std::dec
-    << "\n";
-
 }               
 
 #define APERFMPERF_SHIFT 10
@@ -66,15 +60,17 @@ unsigned long calc_aperfmperf_ratio(struct aperfmperf *old,
     uint64_t mperf = neu->mperf - old->mperf;
     unsigned long ratio = aperf;
 
-    std::clog
-    << "aperf: " << aperf
-    << ", mperf: " << mperf;
+    std::cout
+    << "(new aperf(" << neu->aperf << ") - old aperf(" << old->aperf << ") = " << aperf << ")"
+    << " / "
+    << "(new mperf(" << neu->mperf << ") - old mperf(" << old->mperf << ") = " << mperf << ")"
+    ;
 
     mperf >>= APERFMPERF_SHIFT;                   
     if (mperf)
 	ratio = aperf / mperf;
 
-    std::clog << ", ratio: " << ratio << "\n";
+    std::cout << " = " << ratio << "\n";
 
     return ratio;
 }                    
@@ -125,6 +121,7 @@ main(int argc, char *argv[])
             case 's':
                 for (int i = 0; i < atoi(optarg); ++i) {
                     std::clog << "scale: " << scale_aperfmperf() << "\n";
+                    std::clog << "\n";
                     sleep(1);
                 }
                 break;
