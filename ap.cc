@@ -8,47 +8,42 @@
 #include <unistd.h>
 
 
+#define MSR_IA32_MPERF                  0x000000e7
+#define MSR_IA32_APERF                  0x000000e8
+
 int cpucount;
-int fd;
+int fds[100];
         
 struct aperfmperf {
     uint64_t aperf, mperf;
 };
 
-aperfmperf oldMP;
+aperfmperf oldMPs[100];
 
-static uint64_t readmsr(size_t regno)
+static uint64_t readmsr(size_t cpu, size_t regno)
 {
-    lseek(fd, regno, SEEK_SET);
+    lseek(fds[cpu], regno, SEEK_SET);
     uint64_t val;
-    if (read(fd, &val, sizeof val) != sizeof val) {
+    if (read(fds[cpu], &val, sizeof val) != sizeof val) {
 	std::clog << "read failed: " << strerror(errno) << std::endl;
         abort();
     }
     return val;
 }
 
-static void writemsr(size_t regno, uint64_t val)
+static void writemsr(size_t cpu, size_t regno, uint64_t val)
 {
-    lseek(fd, regno, SEEK_SET);
-    if (write(fd, &val, sizeof val) != sizeof val) {
+    lseek(fds[cpu], regno, SEEK_SET);
+    if (write(fds[cpu], &val, sizeof val) != sizeof val) {
 	std::clog << "write failed: " << strerror(errno) << std::endl;
         abort();
     }
 }
 
-
-#define rdmsrl(msr, val)                        \
-        ((val) = readmsr((msr)))
-
-#define MSR_IA32_MPERF                  0x000000e7
-#define MSR_IA32_APERF                  0x000000e8
-
-
-static inline void get_aperfmperf(struct aperfmperf *am)
+static inline void get_aperfmperf(size_t cpu, struct aperfmperf *am)
 {
-    rdmsrl(MSR_IA32_APERF, am->aperf);
-    rdmsrl(MSR_IA32_MPERF, am->mperf);
+    am->aperf = readmsr(cpu, MSR_IA32_APERF);
+    am->mperf = readmsr(cpu, MSR_IA32_MPERF);
 }               
 
 #define APERFMPERF_SHIFT 10
@@ -61,7 +56,7 @@ unsigned long calc_aperfmperf_ratio(struct aperfmperf *old,
     unsigned long ratio = aperf;
 
     std::cout
-    << "(new aperf(" << neu->aperf << ") - old aperf(" << old->aperf << ") = " << aperf << ")"
+    << "new aperf(" << neu->aperf << ") - old aperf(" << old->aperf << ") = " << aperf << ")"
     << " / "
     << "(new mperf(" << neu->mperf << ") - old mperf(" << old->mperf << ") = " << mperf << ")"
     ;
@@ -74,17 +69,14 @@ unsigned long calc_aperfmperf_ratio(struct aperfmperf *old,
 
     return ratio;
 }                    
-                   
-        
 
-
-static unsigned long scale_aperfmperf(void)
+static unsigned long scale_aperfmperf(size_t cpu)
 {
-    struct aperfmperf val, *old = &oldMP;
+    struct aperfmperf val, *old = &oldMPs[cpu];
     unsigned long ratio, flags;
-
-    get_aperfmperf(&val);
+    get_aperfmperf(cpu, &val);
     
+    std::cout << "cpu " << cpu << ": ";
     ratio = calc_aperfmperf_ratio(old, &val);
     *old = val;
 
@@ -100,29 +92,50 @@ int getreg(const char *p) {
     return strtoll(p, 0, 0);
 }
 
+static void
+opencpu(int cpuno)
+{
+    char buf[1024];
+    sprintf(buf, "/dev/cpu/%d/msr", cpuno);
+    fds[cpucount] = open(buf, O_RDWR);
+    if (fds[cpucount] == -1) {
+        std::clog << "failed to open " << buf << ": " << strerror(errno) << std::endl;
+        abort();
+    }
+    std::clog << "opened " << buf << std::endl;
+    cpucount++;
+}
+
 int
 main(int argc, char *argv[])
 {
     int c;
-    while ((c = getopt(argc, argv, "c:w:r:s:")) != -1) {
+    while ((c = getopt(argc, argv, "m:c:w:r:s:q")) != -1) {
         switch (c) {
-            case 'c': {
-                char buf[1024];
-                sprintf(buf, "/dev/cpu/%s/msr", optarg);
-                fd = open(buf, O_RDWR);
-                if (fd == -1) {
-                    std::clog << "failed to open " << buf << ": " << strerror(errno) << std::endl;
-                    abort();
+            case 'q': {
+                for (size_t i = 0; i < cpucount; ++i) {
+                    aperfmperf one, two;
+                    get_aperfmperf(i, &one);
+                    get_aperfmperf(i, &two);
+                    calc_aperfmperf_ratio(&one, &two);
                 }
-                std::clog << "opened " << buf << std::endl;
                 break;
             }
 
+            case 'c':
+                opencpu(atoi(optarg));
+                break;
+
+            case 'm':
+                for (size_t i = 0; i < atoi(optarg); ++i)
+                    opencpu(i);
+                break;
+
             case 's':
                 for (int i = 0; i < atoi(optarg); ++i) {
-                    std::clog << "scale: " << scale_aperfmperf() << "\n";
-                    std::clog << "\n";
-                    sleep(1);
+                    for (int cpu = 0; cpu < cpucount; ++cpu)
+                        scale_aperfmperf(cpu);
+                    sleep(5);
                 }
                 break;
 
@@ -137,13 +150,15 @@ main(int argc, char *argv[])
                 int reg = getreg(p);
                 uint64_t val = strtoull(eq, 0, 0);
                 std::clog << "write " << val << " to " << reg << std::endl;
-                writemsr(reg, val);
+                for (size_t i = 0; i < cpucount; ++i)
+                    writemsr(i, reg, val);
                 break;
             }
                 
             case 'r': {
                 int reg = getreg(optarg);
-                std::clog << "read " << reg << ": " << readmsr(reg) << std::endl;
+                for (size_t i = 0; i < cpucount; ++i) 
+                    std::clog << "cpu " << i << ": read " << reg << ": " << readmsr(i, reg) << std::endl;
                 break;
             }
         }
