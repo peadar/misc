@@ -11,7 +11,7 @@
 #define MSR_IA32_MPERF                  0x000000e7
 #define MSR_IA32_APERF                  0x000000e8
 
-int cpucount;
+size_t cpucount;
 int fds[100];
         
 struct aperfmperf {
@@ -73,7 +73,7 @@ unsigned long calc_aperfmperf_ratio(struct aperfmperf *old,
 static unsigned long scale_aperfmperf(size_t cpu)
 {
     struct aperfmperf val, *old = &oldMPs[cpu];
-    unsigned long ratio, flags;
+    unsigned long ratio;
     get_aperfmperf(cpu, &val);
     
     std::cout << "cpu " << cpu << ": ";
@@ -127,13 +127,13 @@ main(int argc, char *argv[])
                 break;
 
             case 'm':
-                for (size_t i = 0; i < atoi(optarg); ++i)
+                for (size_t i = 0; i < strtoul(optarg, 0, 0); ++i)
                     opencpu(i);
                 break;
 
             case 's':
                 for (int i = 0; i < atoi(optarg); ++i) {
-                    for (int cpu = 0; cpu < cpucount; ++cpu)
+                    for (size_t cpu = 0; cpu < cpucount; ++cpu)
                         scale_aperfmperf(cpu);
                     sleep(5);
                 }

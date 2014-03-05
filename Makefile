@@ -1,10 +1,23 @@
-CFLAGS += -std=c99 -Wall -g -I $(HOME)/openssl/include
+CFLAGS += -std=c99 -Wall -g
 CXXFLAGS += -Wall -g
-LIBS += -lssl -lcrypto -ldl
-LDFLAGS += -g -L $(HOME)/openssl/lib
+SSL_LIBS += -lssl -lcrypto -ldl
+LDFLAGS += -g
+
+TARGETS=resolve connect markov aperf
+
+all: $(TARGETS)
 
 connect: connect.o
-	$(CC) $(LDFLAGS) connect.o -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $^ -o $@ $(SSL_LIBS)
+
+resolve: resolve.o
+	$(CC) $(LDFLAGS) $^ -o $@ 
+
+markov: markov.o
+	$(CXX) $(LDFLAGS) $^ -o $@  -lrt
+
+aperf: aperf.o
+	$(CXX) $(LDFLAGS) $^ -o $@  -lrt
 
 clean:
-	rm connect.o connect
+	rm -f *.o $(TARGETS)
