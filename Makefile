@@ -3,7 +3,7 @@ CXXFLAGS += -Wall -g
 SSL_LIBS += -lssl -lcrypto -ldl
 LDFLAGS += -g
 
-TARGETS=resolve connect markov aperf
+TARGETS=resolve connect markov aperf u+ errno
 
 all: $(TARGETS)
 
@@ -17,7 +17,13 @@ markov: markov.o
 	$(CXX) $(LDFLAGS) $^ -o $@  -lrt
 
 aperf: aperf.o
-	$(CXX) $(LDFLAGS) $^ -o $@  -lrt
+	$(CXX) $(LDFLAGS) $^ -o $@
+
+errno: errno.o
+	$(CC) $(LDFLAGS) $^ -o $@
+
+u+: u+.o
+	$(CXX) $(LDFLAGS) $^ -o $@
 
 clean:
 	rm -f *.o $(TARGETS)
