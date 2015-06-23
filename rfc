@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ $# = 1 ]
+then
+    extn=txt
+else
+    if [ $# = 1 ]
+    then
+	extn=$2
+    else
+	echo "usage: rfc <rfc number> [format (ps|txt)]" 2>&1
+	exit 1
+    fi
+fi
+
+dname=${RFCDIR:-$HOME/doc/standards/rfcs}
+mkdir -p $fname
+fname=$dname/rfc$1.extn
+
+if [ \! -f $fname ] 
+then
+    curl -o $fname http://www.ietf.org/rfc/rfc$1.$extn
+    chmod a-w $fname
+fi
+echo $fname
