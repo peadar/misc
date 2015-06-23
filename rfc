@@ -14,8 +14,8 @@ else
 fi
 
 dname=${RFCDIR:-$HOME/doc/standards/rfcs}
-mkdir -p $fname
-fname=$dname/rfc$1.extn
+mkdir -p $dname
+fname=$dname/rfc$1.$extn
 
 if [ \! -f $fname ] 
 then
