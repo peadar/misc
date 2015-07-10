@@ -4,12 +4,12 @@ if [ $# = 1 ]
 then
     extn=txt
 else
-    if [ $# = 1 ]
+    if [ $# = 2 ]
     then
-	extn=$2
+        extn=$2
     else
-	echo "usage: rfc <rfc number> [format (ps|txt)]" 2>&1
-	exit 1
+        echo "usage: rfc <rfc number> [format (ps|txt)]" 2>&1
+        exit 1
     fi
 fi
 
@@ -19,7 +19,13 @@ fname=$dname/rfc$1.$extn
 
 if [ \! -f $fname ] 
 then
-    curl -o $fname http://www.ietf.org/rfc/rfc$1.$extn
+    code=`curl -s -w %{http_code} -o $fname http://www.ietf.org/rfc/rfc$1.$extn`
+    if [ `expr $code / 100` -ne 2 ]
+    then
+      rm $fname
+      echo "fetch failed: $code" 1>&2
+      exit 1
+    fi
     chmod a-w $fname
 fi
 echo $fname
