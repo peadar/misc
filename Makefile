@@ -1,9 +1,9 @@
 CFLAGS += -std=c99 -Wall -g
-CXXFLAGS += -Wall -g
+CXXFLAGS += -Wall -g -std=c++0x
 SSL_LIBS += -lssl -lcrypto -ldl
 LDFLAGS += -g
 
-TARGETS=resolve connect markov aperf u+ errno
+TARGETS=resolve connect markov aperf u+ errno smbios
 
 all: $(TARGETS)
 
@@ -21,6 +21,10 @@ aperf: aperf.o
 
 errno: errno.o
 	$(CC) $(LDFLAGS) $^ -o $@
+
+smbios: smbios.o
+	$(CXX) $(LDFLAGS) $^ -o $@
+
 
 u+: u+.o
 	$(CXX) $(LDFLAGS) $^ -o $@

@@ -163,7 +163,7 @@ main(int, char *[])
          default:
             const char *p = reinterpret_cast<const char *>(header->end());
             while (*p) {
-               std::clog << p << std::endl;
+               std::cout << p << std::endl;
                p += strlen(p);
             }
             break;
