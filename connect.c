@@ -1,4 +1,5 @@
 #define _POSIX_SOURCE
+#define _GNU_SOURCE
 #include <assert.h>
 #include <errno.h>
 #include <netdb.h>
@@ -7,8 +8,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 
 int
 main(int argc, char *argv[])
