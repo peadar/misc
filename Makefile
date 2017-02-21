@@ -3,7 +3,7 @@ CXXFLAGS += -Wall -g -std=c++0x
 SSL_LIBS += -lssl -lcrypto -ldl
 LDFLAGS += -g
 
-TARGETS=resolve connect markov aperf u+ errno smbios
+TARGETS=resolve connect markov aperf u+ errno smbios nslurk
 
 all: $(TARGETS)
 
@@ -25,6 +25,8 @@ errno: errno.o
 smbios: smbios.o
 	$(CXX) $(LDFLAGS) $^ -o $@
 
+nslurk: nslurk.o
+	$(CC) $(LDFLAGS) $^ -o $@
 
 u+: u+.o
 	$(CXX) $(LDFLAGS) $^ -o $@
