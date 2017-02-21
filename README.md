@@ -14,3 +14,5 @@ Generates the UTF-8 encoding of the euro symbol
 
 * markov.cc: markov generator
 
+* smbios.cc: peer into the SMBIOS on your computer
+
