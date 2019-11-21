@@ -1,9 +1,9 @@
 CFLAGS += -std=c99 -Wall -g
-CXXFLAGS += -Wall -g -std=c++0x
+CXXFLAGS += -Wall -g -std=c++14
 SSL_LIBS += -lssl -lcrypto -ldl
 LDFLAGS += -g
 
-TARGETS=resolve connect markov aperf u+ errno smbios nslurk
+TARGETS=resolve connect markov aperf u+ errno smbios nslurk demangle
 
 all: $(TARGETS)
 
