@@ -8,6 +8,13 @@ main(int argc, char *argv[])
 {
     int i;
 
+    if (argc == 1) {
+        for (i = 0; i < ERANGE; ++i) {
+            printf("%d\t%s\n", i, strerror(i));
+        }
+        return 0;
+    }
+
     for (i = 1; i < argc; ++i) {
         char *p = 0;
         long x = strtol(argv[i], &p, 0);
