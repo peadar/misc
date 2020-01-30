@@ -1,9 +1,12 @@
+.PHONY: all clean install check
+
 CFLAGS += -std=c99 -Wall -g
-CXXFLAGS += -Wall -g -std=c++14
+CXXFLAGS += -Wall -g -std=c++17
 SSL_LIBS += -lssl -lcrypto -ldl
 LDFLAGS += -g
+PREFIX=/usr/local
 
-TARGETS=resolve connect markov aperf u+ errno smbios nslurk demangle
+TARGETS=resolve connect markov aperf u+ errno smbios nslurk demangle compile_pcap
 
 all: $(TARGETS)
 
@@ -33,3 +36,9 @@ u+: u+.o
 
 clean:
 	rm -f *.o $(TARGETS)
+
+compile_pcap: compile_pcap.o
+	$(CXX) $(LDFLAGS) $^ -o $@ -lpcap
+
+install:
+	cp $(TARGETS) $(PREFIX)/bin
